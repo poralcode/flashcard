@@ -1,5 +1,8 @@
-name: Flashcard
-description: A new Flutter project.
+name: flashcard
+description: The Flashcard App is a straightforward and offline tool designed to streamline your study sessions. 
+Whether you're a student preparing for exams, a language learner honing your skills, or a medical professional memorizing essential knowledge, 
+this app offers a hassle-free way to create, study, and track your progress with custom flashcards. 
+This application is intended solely for educational purposes in the field of Mobile Application Development..
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
