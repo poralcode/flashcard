@@ -1,8 +1,5 @@
 name: flashcard
-description: The Flashcard App is a straightforward and offline tool designed to streamline your study sessions. 
-Whether you're a student preparing for exams, a language learner honing your skills, or a medical professional memorizing essential knowledge, 
-this app offers a hassle-free way to create, study, and track your progress with custom flashcards. 
-This application is intended solely for educational purposes in the field of Mobile Application Development..
+description: The Flashcard App.
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -43,6 +40,29 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
 
+  # The following adds the Fluttr Launcher Icons framework to automated the making of the launcher icon of the app.
+  # For more information, refer to this link: https://pub.dev/packages/flutter_launcher_icons
+  flutter_launcher_icons: ^0.13.1
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  remove_alpha_ios: true
+  image_path: "lib/assets/logo.png"
+  min_sdk_android: 21 # android min sdk min:16, default 21
+  web:
+    generate: true
+    image_path: "lib/assets/logo.png"
+    background_color: "#hexcode"
+    theme_color: "#hexcode"
+  windows:
+    generate: true
+    image_path: "lib/assets/logo.png"
+    icon_size: 48 # min:48, max:256, default: 48
+  macos:
+    generate: true
+    image_path: "lib/assets/logo.png"
+
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
   # activated in the `analysis_options.yaml` file located at the root of your
@@ -65,7 +85,8 @@ flutter:
   # assets:
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
-
+  assets:
+      - lib/assets/logo.png
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware
 
