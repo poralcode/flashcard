@@ -8,10 +8,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:flashcard/main.dart';
+import 'package:flashcard/screens/new_flashcard.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
+  /*testWidgets('Check if the Flashcard Title is valid.',
+      (WidgetTester tester) async {
     // Build our app and trigger a frame.
     await tester.pumpWidget(const MyApp());
 
@@ -26,5 +27,33 @@ void main() {
     // Verify that our counter has incremented.
     expect(find.text('0'), findsNothing);
     expect(find.text('1'), findsOneWidget); */
+  }); */
+
+  testWidgets('Check if the Flashcard Title is valid.',
+      (WidgetTester tester) async {
+    // Build the NewFlashcard widget
+    await tester.pumpWidget(MaterialApp(home: NewFlashcard()));
+
+    // Find the TextField by its Key
+    final textFieldKey = Key('title_textfield');
+    expect(find.byKey(textFieldKey), findsOneWidget);
+
+    // Enter a valid title (e.g., more than 10 characters)
+    await tester.enterText(find.byKey(textFieldKey), 'Valid Title');
+
+    // Trigger a frame rebuild
+    await tester.pump();
+
+    // Verify that the error text is not shown
+    expect(find.text('Title must be at least 10 characters'), findsNothing);
+
+    // Enter an invalid title (less than 10 characters)
+    await tester.enterText(find.byKey(textFieldKey), 'Short');
+
+    // Trigger a frame rebuild
+    await tester.pump();
+
+    // Verify that the error text is shown
+    expect(find.text('Title must be at least 10 characters'), findsOneWidget);
   });
 }
