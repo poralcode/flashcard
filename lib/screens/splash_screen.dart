@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 const String appName = 'Flashcard';
 final String copyright = '${getCurrentYear()} \u00a9 Poralcode';
@@ -22,7 +21,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
     //SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersive); //this remove the top and bottom bar making the app full screen.
     // Initialize data before showing the main screen: Fetch list of flashcard items from a database.
-    Future.delayed(const Duration(seconds: 15), () {
+    Future.delayed(const Duration(seconds: 3), () {
       Navigator.pushReplacementNamed(context, '/home');
     });
   }
