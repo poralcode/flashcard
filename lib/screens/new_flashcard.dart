@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flashcard/screens/new_question.dart';
 
 /* NewFlashcard Screen */
 class NewFlashcard extends StatefulWidget {
@@ -14,11 +15,12 @@ class _NewFlashcardState extends State<NewFlashcard> {
 
   @override
   Widget build(BuildContext context) {
-    final focusNode = FocusNode();
-
     return Scaffold(
       appBar: AppBar(
-        title: const Text('New Flashcard'),
+        title: const Text(
+          'New Flashcard',
+          style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.w500),
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -36,7 +38,6 @@ class _NewFlashcardState extends State<NewFlashcard> {
                       controller: titleController,
                       autofocus: true,
                       maxLength: 150,
-                      focusNode: focusNode,
                       decoration: InputDecoration(
                         labelText: 'Title',
                         hintText: 'e.g. Medical Equipments',
@@ -68,9 +69,13 @@ class _NewFlashcardState extends State<NewFlashcard> {
                       child: ElevatedButton(
                         onPressed: () {
                           // Check if there's no error before continuing
+                          validateTitle(titleController.text);
                           if (errorText == null) {
-                            // Handle the continue button click
-                            debugPrint("Continue button clicked");
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) => NewQuestion(),
+                              ),
+                            );
                           }
                         },
                         child: Text("Continue"),
@@ -94,7 +99,7 @@ class _NewFlashcardState extends State<NewFlashcard> {
       });
     } else {
       setState(() {
-        errorText = 'Title must be at least 10 characters';
+        errorText = 'Title must be at least 10 characters.';
       });
     }
   }

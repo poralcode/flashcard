@@ -14,7 +14,10 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Flashcard'),
+        title: const Text(
+          'Flashcard',
+          style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.w500),
+        ),
       ),
       // Add resizeToAvoidBottomInset property to avoid keyboard overlapping
       resizeToAvoidBottomInset: false,

@@ -42,7 +42,11 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
 
-  # The following adds the Fluttr Launcher Icons framework to automated the making of the launcher icon of the app.
+  # The following adds the image_picker. This allow us to select photo from Gallery or use the Camera function.
+  # For more information, refer to this link: https://pub.dev/packages/image_picker
+  image_picker: ^1.0.4
+
+  # The following adds the Flutter Launcher Icons framework to automated the making of the launcher icon of the app.
   # For more information, refer to this link: https://pub.dev/packages/flutter_launcher_icons
   flutter_launcher_icons: ^0.13.1
 
