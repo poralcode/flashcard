@@ -1,9 +1,8 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
+// DESCRIPTION: A Test when interacting with the creation of New Flashcard.
+// What test is done here:
+//  1. Ensure that the Title of thew new flashcard item is valid.
+//    - The TextField Title with the Key of `title_textfield` should have at least 10 characters. Expected error message is 'Title must be at least 10 characters.'
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
