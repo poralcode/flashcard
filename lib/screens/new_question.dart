@@ -117,79 +117,83 @@ class _NewQuestionState extends State<NewQuestion> {
                       ),
                     )
                   else if (selectedRadio == 1)
-                    Card(
-                      key: Key('image_card'),
-                      elevation: 4,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                    if (selectedRadio == 1)
+                      Column(
                         children: [
-                          Container(
-                            height: 200,
-                            decoration: BoxDecoration(
-                              color: Colors.grey[200],
-                              borderRadius: BorderRadius.vertical(
-                                  top: Radius.circular(16)),
+                          Card(
+                            key: Key('image_card'),
+                            elevation: 4,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
                             ),
-                            child: Center(
-                              child: _imageUrl.isEmpty
-                                  ? Icon(
-                                      Icons.photo,
-                                      size: 100,
-                                      color: Colors.grey,
-                                    )
-                                  : Image.file(
-                                      File(_imageUrl),
-                                      fit: BoxFit.cover,
-                                    ),
-                            ),
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Padding(
-                                padding: EdgeInsets.only(
-                                    left: 10.0), // Add left margin
-                                child: Text(
-                                  'Question no. 1',
-                                  style: TextStyle(
-                                    fontSize: 14,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Container(
+                                  height: 200,
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey[200],
+                                    borderRadius: BorderRadius.vertical(
+                                        top: Radius.circular(16)),
+                                  ),
+                                  child: Center(
+                                    child: _imageUrl.isEmpty
+                                        ? Icon(
+                                            Icons.photo,
+                                            size: 100,
+                                            color: Colors.grey,
+                                          )
+                                        : Image.file(
+                                            File(_imageUrl),
+                                            fit: BoxFit.cover,
+                                          ),
                                   ),
                                 ),
-                              ),
-                              Row(
-                                children: [
-                                  IconButton(
-                                    key: Key('icon_button_camera'),
-                                    icon: Icon(Icons.camera),
-                                    onPressed: _handleCameraButton,
-                                  ),
-                                  IconButton(
-                                    key: Key('icon_button_gallery'),
-                                    icon: Icon(Icons.photo),
-                                    onPressed: _handleGalleryButton,
-                                  ),
-                                ],
-                              ),
-                            ],
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Padding(
+                                      padding: EdgeInsets.only(left: 10.0),
+                                      child: Text(
+                                        'Question no. 1',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ),
+                                    Row(
+                                      children: [
+                                        IconButton(
+                                          key: Key('icon_button_camera'),
+                                          icon: Icon(Icons.camera),
+                                          onPressed: _handleCameraButton,
+                                        ),
+                                        IconButton(
+                                          key: Key('icon_button_gallery'),
+                                          icon: Icon(Icons.photo),
+                                          onPressed: _handleGalleryButton,
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
                         ],
                       ),
-                    ),
 
-                  if (selectedRadio == 1 && imageError != null)
+                  if (imageError != null && imageError!.isNotEmpty)
+                    // Only build the Padding and Text widgets if imageError is not null and not empty
                     Padding(
-                      padding: EdgeInsets.only(
-                          left: 12.0, top: 5.0), // Add left margin
+                      padding: EdgeInsets.only(left: 12.0, top: 5.0),
                       child: Text(
-                        key: Key('image_error_message'),
                         imageError!,
+                        key: Key('image_error_message'),
                         style: TextStyle(
                           fontSize: 12,
-                          color: Colors.red[
-                              800], // Use a shade of red for error messages
+                          color: Colors.red[800],
                         ),
                       ),
                     ),
@@ -201,6 +205,7 @@ class _NewQuestionState extends State<NewQuestion> {
                       child: TextField(
                         key: Key('answer_textfield'),
                         controller: answerTextController,
+                        maxLength: 255,
                         decoration: InputDecoration(
                           labelText: 'Answer',
                           helperText: 'Specify the correct answer.',
@@ -219,6 +224,7 @@ class _NewQuestionState extends State<NewQuestion> {
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: <Widget>[
                       ElevatedButton(
+                        key: Key('button_done'),
                         onPressed: () {
                           // Handle Done button click
                           if (isValidInput(
@@ -230,6 +236,7 @@ class _NewQuestionState extends State<NewQuestion> {
                       ),
                       const SizedBox(width: 8),
                       ElevatedButton(
+                        key: Key('button_next'),
                         onPressed: () {
                           // Handle Next button click
                           if (isValidInput(
