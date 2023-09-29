@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // Import services library for input formatters
 import 'package:flashcard/screens/new_question.dart';
 
-/* NewFlashcard Screen */
 class NewFlashcard extends StatefulWidget {
   const NewFlashcard({Key? key}) : super(key: key);
 
@@ -11,7 +11,16 @@ class NewFlashcard extends StatefulWidget {
 
 class _NewFlashcardState extends State<NewFlashcard> {
   final titleController = TextEditingController();
-  String? errorText;
+  final numberController =
+      TextEditingController(); // Controller for number input
+  String? errorTitle;
+  String? errorQuestionTotal;
+
+  @override
+  void dispose() {
+    numberController.dispose(); // Dispose the controller to free resources
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,15 +35,13 @@ class _NewFlashcardState extends State<NewFlashcard> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: <Widget>[
-            // Centered Container to limit the width and align horizontally
             Center(
               child: Container(
-                constraints: BoxConstraints(maxWidth: 400), // Limit the width
+                constraints: BoxConstraints(maxWidth: 400),
                 child: Column(
                   children: [
-                    // TextField for the title
                     TextField(
-                      key: Key('title_textfield'), // Assign a unique Key
+                      key: Key('title_textfield'),
                       controller: titleController,
                       autofocus: true,
                       maxLength: 150,
@@ -45,12 +52,12 @@ class _NewFlashcardState extends State<NewFlashcard> {
                         helperText:
                             'Add a meaningful title for this flashcard.',
                         border: OutlineInputBorder(),
-                        errorText: errorText,
+                        errorText: errorTitle,
                         suffixIcon: IconButton(
                           onPressed: () {
                             titleController.clear();
                             setState(() {
-                              errorText = null;
+                              errorTitle = null;
                             });
                           },
                           icon: Icon(Icons.clear),
@@ -60,20 +67,47 @@ class _NewFlashcardState extends State<NewFlashcard> {
                         validateTitle(value);
                       },
                     ),
-                    // Add spacing between TextField and Button
+                    SizedBox(height: 25),
+
+                    // Number input field with input formatter
+                    TextFormField(
+                      key: Key('number_input'),
+                      controller: numberController,
+                      maxLength: 2,
+                      keyboardType:
+                          TextInputType.number, // Set input type to number
+                      inputFormatters: <TextInputFormatter>[
+                        FilteringTextInputFormatter
+                            .digitsOnly // Allow only digits
+                      ],
+                      decoration: InputDecoration(
+                        labelText: 'Total number of questions',
+                        hintText: 'Enter a number',
+                        errorText: errorQuestionTotal,
+                        border: OutlineInputBorder(),
+                      ),
+                      onChanged: (value) {
+                        validateTotalNumber(value);
+                      },
+                    ),
+
                     SizedBox(height: 16),
 
-                    // Align the Button to the right
                     Align(
                       alignment: Alignment.centerRight,
                       child: ElevatedButton(
                         onPressed: () {
-                          // Check if there's no error before continuing
                           validateTitle(titleController.text);
-                          if (errorText == null) {
+                          validateTotalNumber(numberController.text);
+                          if (errorTitle == null &&
+                              errorQuestionTotal == null) {
                             Navigator.of(context).push(
                               MaterialPageRoute(
-                                builder: (context) => NewQuestion(),
+                                builder: (context) => NewQuestion(
+                                  title: titleController.text,
+                                  totalQuestions:
+                                      int.tryParse(numberController.text),
+                                ),
                               ),
                             );
                           }
@@ -91,15 +125,35 @@ class _NewFlashcardState extends State<NewFlashcard> {
     );
   }
 
+  void validateTotalNumber(String value) {
+    if (value.isNotEmpty) {
+      final int? number = int.tryParse(value);
+
+      if (number != null && number > 0) {
+        setState(() {
+          errorQuestionTotal = null;
+        });
+      } else {
+        setState(() {
+          errorQuestionTotal =
+              'Please provide a valid positive number of questions.';
+        });
+      }
+    } else {
+      setState(() {
+        errorQuestionTotal = 'Please provide total number of questions.';
+      });
+    }
+  }
+
   void validateTitle(String value) {
     if (value.length >= 10) {
-      // Clear any previous error message
       setState(() {
-        errorText = null;
+        errorTitle = null;
       });
     } else {
       setState(() {
-        errorText = 'Title must be at least 10 characters.';
+        errorTitle = 'Title must be at least 10 characters.';
       });
     }
   }
