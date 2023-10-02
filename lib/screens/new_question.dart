@@ -1,123 +1,162 @@
 import 'dart:io';
 
+import 'package:flashcard/models/flashcard_item.dart';
+import 'package:flashcard/models/flashcard_provider.dart';
+import 'package:flashcard/models/question_answer_item.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
 
-class NewQuestion extends StatefulWidget {
-  const NewQuestion({Key? key});
+class NewQuestion extends StatelessWidget {
+  final String title;
+  final int? totalQuestions;
+
+  const NewQuestion({
+    Key? key,
+    required this.title,
+    required this.totalQuestions,
+  }) : super(key: key);
 
   @override
-  State<NewQuestion> createState() => _NewQuestionState();
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          'Question & Answer',
+          style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.w500),
+        ),
+      ),
+      resizeToAvoidBottomInset: true,
+      body: QuestionAnswerPage(
+        title: title,
+        totalQuestions: totalQuestions,
+      ),
+    );
+  }
 }
 
-class _NewQuestionState extends State<NewQuestion> {
-  int selectedRadio = 0;
-  TextEditingController questionTextController = TextEditingController();
-  TextEditingController answerTextController = TextEditingController();
-  String _imageUrl = '';
-  String? imageError;
-  String? questionError;
-  String? answerError;
+class QuestionAnswerPage extends StatefulWidget {
+  final int? totalQuestions;
+  final String title;
+  const QuestionAnswerPage({
+    Key? key,
+    required this.title,
+    required this.totalQuestions,
+  }) : super(key: key);
 
-  Future<void> _handleCameraButton() async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.camera);
+  @override
+  _QuestionAnswerPageState createState() => _QuestionAnswerPageState();
+}
 
-    if (pickedFile != null) {
-      setState(() {
-        _imageUrl = pickedFile.path;
-        validateImage(_imageUrl);
-      });
+class _QuestionAnswerPageState extends State<QuestionAnswerPage> {
+  final List<QuestionAnswerItem> questionList = [];
+  int currentPage = 0;
+  final PageController pageController = PageController();
+  List<GlobalKey<FormState>> formKeys = [];
+
+  @override
+  void initState() {
+    super.initState();
+    createQuestionsList(widget.totalQuestions ?? 1);
+  }
+
+  void createQuestionsList(int total) {
+    for (int i = 0; i < total; i++) {
+      questionList.add(QuestionAnswerItem(i, false, '', '', ''));
+      formKeys.add(GlobalKey<FormState>());
     }
   }
 
-  Future<void> _handleGalleryButton() async {
+  Future<void> _handleImageSelection(ImageSource source, int index) async {
     final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    final pickedFile = await picker.pickImage(source: source);
 
     if (pickedFile != null) {
       setState(() {
-        _imageUrl = pickedFile.path;
-        validateImage(_imageUrl);
+        questionList[index].imageQuestion = pickedFile.path;
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Questions & answers',
-          style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.w500),
-        ),
-      ),
-      resizeToAvoidBottomInset: true,
-      body: SingleChildScrollView(
-        // Wrap your Column with SingleChildScrollView
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Center(
-            child: Container(
-              constraints: BoxConstraints(maxWidth: 400),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: <Widget>[
-                      Radio(
-                        key: Key('text_radio_button'),
-                        value: 0,
-                        groupValue: selectedRadio,
-                        onChanged: (value) {
-                          setState(() {
-                            selectedRadio = value as int;
-                          });
-                        },
-                      ),
-                      const Text('Text'),
-                      Radio(
-                        key: Key('image_radio_button'),
-                        value: 1,
-                        groupValue: selectedRadio,
-                        onChanged: (value) {
-                          setState(() {
-                            selectedRadio = value as int;
-                          });
-                        },
-                      ),
-                      const Text('Image'),
-                    ],
-                  ),
-                  // Conditional rendering based on selected radio button
-                  if (selectedRadio == 0)
-                    Center(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8.0),
-                        child: TextField(
-                          key: Key('question_textfield'),
-                          controller: questionTextController,
-                          maxLines:
-                              questionTextController.text.split('\n').length < 5
-                                  ? null
-                                  : 5,
-                          maxLength: 300,
-                          decoration: InputDecoration(
-                            labelText: 'Question no. 1',
-                            helperText: 'Specify the question.',
-                            errorText: questionError,
-                            border: OutlineInputBorder(),
-                          ),
+    return PageView.builder(
+      controller: pageController,
+      itemCount: questionList.length,
+      itemBuilder: (context, index) {
+        final currentQuestion = questionList[index];
+        int? qMaxLines = null;
+        void setMaxLines(){
+          setState(() {
+            qMaxLines = currentQuestion.textQuestion.split('\n').length < 5 ? null : 5;
+          });
+        }
+
+        return Form(
+          autovalidateMode: AutovalidateMode.onUserInteraction,
+          key: formKeys[index],
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16.0),
+            child: Center(
+              child: Container(
+                constraints: BoxConstraints(maxWidth: 400),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: <Widget>[
+                        Radio(
+                          key: Key('text_radio_button'),
+                          value: false,
+                          groupValue: currentQuestion.isImageQuestion,
                           onChanged: (value) {
-                            setState(() {});
-                            validateQuestion(value);
+                            setState(() {
+                              currentQuestion.isImageQuestion = false;
+                            });
                           },
                         ),
-                      ),
-                    )
-                  else if (selectedRadio == 1)
-                    if (selectedRadio == 1)
+                        const Text('Text'),
+                        Radio(
+                          key: Key('image_radio_button'),
+                          value: true,
+                          groupValue: currentQuestion.isImageQuestion,
+                          onChanged: (value) {
+                            setState(() {
+                              currentQuestion.isImageQuestion = true;
+                            });
+                          },
+                        ),
+                        const Text('Image'),
+                      ],
+                    ),
+                    if (!currentQuestion.isImageQuestion)
+                      Center(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8.0),
+                          child: TextFormField(
+                            key: Key('question_textfield'),
+                            initialValue: currentQuestion.textQuestion,
+                            maxLines: qMaxLines,
+                            maxLength: 300,
+                            decoration: InputDecoration(
+                              labelText: 'Question no. ${index + 1}',
+                              helperText: 'Specify the question.',
+                              border: OutlineInputBorder(),
+                            ),
+                            validator: (value) {
+                              return value == null || value.isEmpty || value.length < 1
+                                  ? 'Question must be at least 1 character.'
+                                  : null;
+                            },
+                            onChanged: (value) {
+                              currentQuestion.textQuestion = value;
+                              setMaxLines();
+                            },
+                          ),
+                        ),
+                      )
+                    else
                       Column(
                         children: [
                           Card(
@@ -133,30 +172,28 @@ class _NewQuestionState extends State<NewQuestion> {
                                   height: 200,
                                   decoration: BoxDecoration(
                                     color: Colors.grey[200],
-                                    borderRadius: BorderRadius.vertical(
-                                        top: Radius.circular(16)),
+                                    borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
                                   ),
                                   child: Center(
-                                    child: _imageUrl.isEmpty
+                                    child: currentQuestion.imageQuestion.isEmpty
                                         ? Icon(
                                             Icons.photo,
                                             size: 100,
                                             color: Colors.grey,
                                           )
                                         : Image.file(
-                                            File(_imageUrl),
+                                            File(currentQuestion.imageQuestion),
                                             fit: BoxFit.cover,
                                           ),
                                   ),
                                 ),
                                 Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
                                     Padding(
                                       padding: EdgeInsets.only(left: 10.0),
                                       child: Text(
-                                        'Question no. 1',
+                                        'Question no. ${index + 1}',
                                         style: TextStyle(
                                           fontSize: 14,
                                         ),
@@ -167,12 +204,12 @@ class _NewQuestionState extends State<NewQuestion> {
                                         IconButton(
                                           key: Key('icon_button_camera'),
                                           icon: Icon(Icons.camera),
-                                          onPressed: _handleCameraButton,
+                                          onPressed: () => _handleImageSelection(ImageSource.camera, index),
                                         ),
                                         IconButton(
                                           key: Key('icon_button_gallery'),
                                           icon: Icon(Icons.photo),
-                                          onPressed: _handleGalleryButton,
+                                          onPressed: () => _handleImageSelection(ImageSource.gallery, index),
                                         ),
                                       ],
                                     ),
@@ -181,138 +218,82 @@ class _NewQuestionState extends State<NewQuestion> {
                               ],
                             ),
                           ),
+                          if (currentQuestion.isImageQuestion && currentQuestion.imageQuestion.isEmpty)
+                            Padding(
+                              padding: EdgeInsets.only(left: 12.0, top: 5.0),
+                              child: Text(
+                                'Please select a valid image.',
+                                key: Key('image_error_message'),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.red[800],
+                                ),
+                              ),
+                            ),
                         ],
                       ),
-
-                  if (imageError != null && imageError!.isNotEmpty)
-                    // Only build the Padding and Text widgets if imageError is not null and not empty
-                    Padding(
-                      padding: EdgeInsets.only(left: 12.0, top: 5.0),
-                      child: Text(
-                        imageError!,
-                        key: Key('image_error_message'),
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.red[800],
+                    SizedBox(height: 16),
+                    Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8.0),
+                        child: TextFormField(
+                          initialValue: currentQuestion.answer,
+                          maxLength: 255,
+                          decoration: InputDecoration(
+                            labelText: 'Answer',
+                            helperText: 'Specify the correct answer.',
+                            border: OutlineInputBorder(),
+                          ),
+                          validator: (value) {
+                            return value == null || value.isEmpty || value.length < 1
+                                ? 'Answer must be at least 1 character.'
+                                : null;
+                          },
+                          onChanged: (value) {
+                            currentQuestion.answer = value;
+                          },
                         ),
                       ),
                     ),
-
-                  SizedBox(height: 16),
-                  Center(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8.0),
-                      child: TextField(
-                        key: Key('answer_textfield'),
-                        controller: answerTextController,
-                        maxLength: 255,
-                        decoration: InputDecoration(
-                          labelText: 'Answer',
-                          helperText: 'Specify the correct answer.',
-                          errorText: answerError,
-                          border: OutlineInputBorder(),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: <Widget>[
+                        if (index > 0)
+                          FilledButton(
+                            onPressed: () {
+                              pageController.previousPage(
+                                duration: Duration(milliseconds: 300),
+                                curve: Curves.easeInOut,
+                              );
+                            },
+                            child: Text('Previous'),
+                          ),
+                        const SizedBox(width: 8),
+                        FilledButton(
+                          onPressed: () {
+                            if (formKeys[index].currentState!.validate()) {
+                              if (index == questionList.length - 1) {
+                                FlashcardItem newFlashcardItem = FlashcardItem(0, 0, 0, 0, widget.title, questionList);
+                                Provider.of<FlashcardProvider>(context, listen: false).addFlashcard(newFlashcardItem);
+                                Navigator.of(context).popUntil((route) => route.isFirst);
+                              }
+                              pageController.nextPage(
+                                duration: Duration(milliseconds: 300),
+                                curve: Curves.easeInOut,
+                              );
+                            }
+                          },
+                          child: Text(index < questionList.length - 1 ? 'Next' : 'Finish'),
                         ),
-                        onChanged: (value) {
-                          setState(() {});
-                          validateAnswer(value);
-                        },
-                      ),
+                      ],
                     ),
-                  ),
-
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: <Widget>[
-                      ElevatedButton(
-                        key: Key('button_done'),
-                        onPressed: () {
-                          // Handle Done button click
-                          if (isValidInput(
-                              questionTextController.text,
-                              answerTextController.text,
-                              _imageUrl)) debugPrint("Done button clicked");
-                        },
-                        child: const Text("Done"),
-                      ),
-                      const SizedBox(width: 8),
-                      ElevatedButton(
-                        key: Key('button_next'),
-                        onPressed: () {
-                          // Handle Next button click
-                          if (isValidInput(
-                              questionTextController.text,
-                              answerTextController.text,
-                              _imageUrl)) debugPrint("Next button clicked");
-                        },
-                        child: const Text("Next"),
-                      ),
-                    ],
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
-  }
-
-  /* This function validates the input base on the selected type of question which is Text or Image.  
-     This should be call upon clicking the Button Next or Done to finally validate the inputs before proceeding to the next screen or page.
-  */
-  bool isValidInput(String question, String answer, String imageURL) {
-    if (selectedRadio == 0) {
-      // Text radio button is selected, only validate Question and Answer
-      validateQuestion(question);
-      validateAnswer(answer);
-      return questionError == null && answerError == null;
-    } else if (selectedRadio == 1) {
-      // Image radio button is selected, only validate ImageView and Answer
-      validateImage(imageURL);
-      validateAnswer(answer);
-      return imageError == null && answerError == null;
-    }
-    return false;
-  }
-
-  /* Function to check for a valid image. This function relies on the URL(string) or the Path(string) of the image. Empty string means invalid image. */
-  void validateImage(String value) {
-    if (value.isEmpty) {
-      setState(() {
-        imageError = 'Please select a valid image.';
-      });
-    } else {
-      setState(() {
-        imageError = null;
-      });
-    }
-  }
-
-  /* This function check if the input is a valid question having at least minimum of 1 character. */
-  void validateQuestion(String value) {
-    if (value.length >= 1) {
-      // Clear any previous error message
-      setState(() {
-        questionError = null;
-      });
-    } else {
-      setState(() {
-        questionError = 'Question must be at least 1 character.';
-      });
-    }
-  }
-
-  /* This function check if the input is a valid answer having at least minimum of 1 character. */
-  void validateAnswer(String value) {
-    if (value.length >= 1) {
-      // Clear any previous error message
-      setState(() {
-        answerError = null;
-      });
-    } else {
-      setState(() {
-        answerError = 'Answer must be at least 1 character.';
-      });
-    }
   }
 }
