@@ -1,9 +1,14 @@
+import 'package:flashcard/models/question_answer_item.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // Import services library for input formatters
 import 'package:flashcard/screens/new_question.dart';
 
 class NewFlashcard extends StatefulWidget {
-  const NewFlashcard({Key? key}) : super(key: key);
+  final bool isEdit;
+  final int position;
+  final String title;
+  final List<QuestionAnswerItem> questionList;
+  const NewFlashcard({Key? key, required this.isEdit, required this.title, required this.questionList, required this.position}) : super(key: key);
 
   @override
   _NewFlashcardState createState() => _NewFlashcardState();
@@ -11,10 +16,17 @@ class NewFlashcard extends StatefulWidget {
 
 class _NewFlashcardState extends State<NewFlashcard> {
   final titleController = TextEditingController();
-  final numberController =
-      TextEditingController(); // Controller for number input
+  final numberController = TextEditingController(); // Controller for number input
   String? errorTitle;
   String? errorQuestionTotal;
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize the titleController with the value of 'title'.
+    titleController.text = widget.title;
+    numberController.text = widget.questionList.length > 0 ? widget.questionList.length as String : '';
+  }
 
   @override
   void dispose() {
@@ -26,8 +38,8 @@ class _NewFlashcardState extends State<NewFlashcard> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'New Flashcard',
+        title: Text(
+          widget.isEdit ? 'Edit Flashcard' : 'New Flashcard',
           style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.w500),
         ),
       ),
@@ -49,8 +61,7 @@ class _NewFlashcardState extends State<NewFlashcard> {
                         labelText: 'Title',
                         hintText: 'e.g. Medical Equipments',
                         hintStyle: TextStyle(color: Colors.grey),
-                        helperText:
-                            'Add a meaningful title for this flashcard.',
+                        helperText: 'Add a meaningful title for this flashcard.',
                         border: OutlineInputBorder(),
                         errorText: errorTitle,
                         suffixIcon: IconButton(
@@ -74,11 +85,9 @@ class _NewFlashcardState extends State<NewFlashcard> {
                       key: Key('number_input'),
                       controller: numberController,
                       maxLength: 2,
-                      keyboardType:
-                          TextInputType.number, // Set input type to number
+                      keyboardType: TextInputType.number, // Set input type to number
                       inputFormatters: <TextInputFormatter>[
-                        FilteringTextInputFormatter
-                            .digitsOnly // Allow only digits
+                        FilteringTextInputFormatter.digitsOnly // Allow only digits
                       ],
                       decoration: InputDecoration(
                         labelText: 'Total number of questions',
@@ -95,21 +104,61 @@ class _NewFlashcardState extends State<NewFlashcard> {
 
                     Align(
                       alignment: Alignment.centerRight,
-                      child: ElevatedButton(
+                      child: FilledButton(
                         onPressed: () {
                           validateTitle(titleController.text);
                           validateTotalNumber(numberController.text);
-                          if (errorTitle == null &&
-                              errorQuestionTotal == null) {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (context) => NewQuestion(
-                                  title: titleController.text,
-                                  totalQuestions:
-                                      int.tryParse(numberController.text),
-                                ),
-                              ),
-                            );
+                          //Assuming there are no more errors, we will now proceed showing the new screen.
+                          if (errorTitle == null && errorQuestionTotal == null) {
+                            if (int.parse(numberController.text) < widget.questionList.length) {
+                              showDialog(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return AlertDialog(
+                                    title: Text('Reduce number of questions'),
+                                    content: Text('This will reduce the number of questions to ${numberController.text}. Do you really want to do this?'),
+                                    actions: <Widget>[
+                                      TextButton(
+                                        child: Text('Cancel'),
+                                        onPressed: () {
+                                          Navigator.of(context).pop();
+                                        },
+                                      ),
+                                      TextButton(
+                                        child: Text('Yes'),
+                                        onPressed: () {
+                                          Navigator.of(context).pop();
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                                builder: (context) => NewQuestion(
+                                                      isEdit: widget.isEdit,
+                                                      title: titleController.text,
+                                                      totalQuestions: int.tryParse(numberController.text),
+                                                      questionList: widget.questionList,
+                                                      position: widget.position,
+                                                    )),
+                                          );
+                                        },
+                                      ),
+                                    ],
+                                  );
+                                },
+                              );
+                            } else {
+                              // Navigate to NewQuestion screen.
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => NewQuestion(
+                                          isEdit: widget.isEdit,
+                                          title: titleController.text,
+                                          totalQuestions: int.tryParse(numberController.text),
+                                          questionList: widget.questionList,
+                                          position: widget.position,
+                                        )),
+                              );
+                            }
                           }
                         },
                         child: Text("Continue"),
@@ -135,8 +184,7 @@ class _NewFlashcardState extends State<NewFlashcard> {
         });
       } else {
         setState(() {
-          errorQuestionTotal =
-              'Please provide a valid positive number of questions.';
+          errorQuestionTotal = 'Please provide a valid positive number of questions.';
         });
       }
     } else {
