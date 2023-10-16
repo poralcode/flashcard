@@ -10,11 +10,17 @@ import 'package:provider/provider.dart';
 class NewQuestion extends StatelessWidget {
   final String title;
   final int? totalQuestions;
+  final int position;
+  final bool isEdit;
+  final List<QuestionAnswerItem> questionList;
 
   const NewQuestion({
     Key? key,
     required this.title,
     required this.totalQuestions,
+    required this.isEdit,
+    required this.questionList,
+    required this.position,
   }) : super(key: key);
 
   @override
@@ -28,8 +34,11 @@ class NewQuestion extends StatelessWidget {
       ),
       resizeToAvoidBottomInset: true,
       body: QuestionAnswerPage(
+        isEdit: isEdit,
         title: title,
         totalQuestions: totalQuestions,
+        questionList: questionList,
+        position: position,
       ),
     );
   }
@@ -37,11 +46,17 @@ class NewQuestion extends StatelessWidget {
 
 class QuestionAnswerPage extends StatefulWidget {
   final int? totalQuestions;
+  final int position;
   final String title;
+  final bool isEdit;
+  final List<QuestionAnswerItem> questionList;
   const QuestionAnswerPage({
     Key? key,
+    required this.isEdit,
     required this.title,
     required this.totalQuestions,
+    required this.questionList,
+    required this.position,
   }) : super(key: key);
 
   @override
@@ -49,7 +64,7 @@ class QuestionAnswerPage extends StatefulWidget {
 }
 
 class _QuestionAnswerPageState extends State<QuestionAnswerPage> {
-  final List<QuestionAnswerItem> questionList = [];
+  List<QuestionAnswerItem> questionList = [];
   int currentPage = 0;
   final PageController pageController = PageController();
   List<GlobalKey<FormState>> formKeys = [];
@@ -61,9 +76,24 @@ class _QuestionAnswerPageState extends State<QuestionAnswerPage> {
   }
 
   void createQuestionsList(int total) {
-    for (int i = 0; i < total; i++) {
-      questionList.add(QuestionAnswerItem(i, false, '', '', ''));
-      formKeys.add(GlobalKey<FormState>());
+    if (widget.isEdit) {
+      questionList = widget.questionList; //replace with the old list object.
+      if (total < questionList.length) {
+        questionList.sublist(0, total); //Reduce items here.
+      } else if (total > questionList.length) {
+        for (int i = questionList.length; i < total; i++) {
+          questionList.add(QuestionAnswerItem(i, false, '', '', '')); //Add items to list
+        }
+      }
+      for (int i = 0; i < questionList.length; i++) {
+        formKeys.add(GlobalKey<FormState>()); //recreate the formKeys
+      }
+    } else {
+      //Create new items
+      for (int i = 0; i < total; i++) {
+        questionList.add(QuestionAnswerItem(i, false, '', '', ''));
+        formKeys.add(GlobalKey<FormState>());
+      }
     }
   }
 
@@ -86,7 +116,7 @@ class _QuestionAnswerPageState extends State<QuestionAnswerPage> {
       itemBuilder: (context, index) {
         final currentQuestion = questionList[index];
         int? qMaxLines = null;
-        void setMaxLines(){
+        void setMaxLines() {
           setState(() {
             qMaxLines = currentQuestion.textQuestion.split('\n').length < 5 ? null : 5;
           });
@@ -145,9 +175,7 @@ class _QuestionAnswerPageState extends State<QuestionAnswerPage> {
                               border: OutlineInputBorder(),
                             ),
                             validator: (value) {
-                              return value == null || value.isEmpty || value.length < 1
-                                  ? 'Question must be at least 1 character.'
-                                  : null;
+                              return value == null || value.isEmpty || value.length < 1 ? 'Question must be at least 1 character.' : null;
                             },
                             onChanged: (value) {
                               currentQuestion.textQuestion = value;
@@ -245,9 +273,7 @@ class _QuestionAnswerPageState extends State<QuestionAnswerPage> {
                             border: OutlineInputBorder(),
                           ),
                           validator: (value) {
-                            return value == null || value.isEmpty || value.length < 1
-                                ? 'Answer must be at least 1 character.'
-                                : null;
+                            return value == null || value.isEmpty || value.length < 1 ? 'Answer must be at least 1 character.' : null;
                           },
                           onChanged: (value) {
                             currentQuestion.answer = value;
@@ -270,11 +296,32 @@ class _QuestionAnswerPageState extends State<QuestionAnswerPage> {
                           ),
                         const SizedBox(width: 8),
                         FilledButton(
-                          onPressed: () {
+                          onPressed: () async {
                             if (formKeys[index].currentState!.validate()) {
                               if (index == questionList.length - 1) {
+                                showDialog(
+                                  context: context,
+                                  barrierDismissible: false,
+                                  builder: (BuildContext context) {
+                                    return Dialog(
+                                      child: new Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          new CircularProgressIndicator(),
+                                          new Text("Loading"),
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                );
+                                // Wait for 3 seconds
+                                await Future.delayed(Duration(seconds: 3));
                                 FlashcardItem newFlashcardItem = FlashcardItem(0, 0, 0, 0, widget.title, questionList);
-                                Provider.of<FlashcardProvider>(context, listen: false).addFlashcard(newFlashcardItem);
+                                if (widget.isEdit)
+                                  Provider.of<FlashcardProvider>(context, listen: false).updateFlashcard(widget.position, newFlashcardItem);
+                                else
+                                  Provider.of<FlashcardProvider>(context, listen: false).addFlashcard(newFlashcardItem);
+                                Navigator.of(context).pop(); // Close the loading dialog
                                 Navigator.of(context).popUntil((route) => route.isFirst);
                               }
                               pageController.nextPage(
