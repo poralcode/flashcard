@@ -1,8 +1,10 @@
 import 'package:flashcard/models/flashcard_item.dart';
 import 'package:flashcard/models/flashcard_provider.dart';
 import 'package:flashcard/screens/new_flashcard.dart';
+import 'package:flashcard/screens/play_flashcard.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 /* Home Screen */
 class HomeScreen extends StatefulWidget {
@@ -73,7 +75,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           SizedBox(height: 50), // Add spacing
-          ElevatedButton.icon(
+          FilledButton.icon(
             onPressed: () async {
               Navigator.push(
                 context,
@@ -107,116 +109,124 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildFlashcardList(FlashcardProvider flashcardProvider) {
-    return ListView.builder(
-      itemCount: flashcardProvider.flashcardItems.length,
-      itemBuilder: (context, index) {
-        FlashcardItem item = flashcardProvider.flashcardItems[index];
-        return Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              children: <Widget>[
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: <Widget>[
-                    Flexible(
-                      child: Text(
-                        item.flashcardName,
-                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                        overflow: TextOverflow.ellipsis,
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 16.0),
+      child: ListView.builder(
+        itemCount: flashcardProvider.flashcardItems.length,
+        itemBuilder: (context, index) {
+          FlashcardItem item = flashcardProvider.flashcardItems[index];
+          return Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                children: <Widget>[
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: <Widget>[
+                      Flexible(
+                        child: Text(
+                          item.flashcardName,
+                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                    ),
-                    if (item.score > 0)
-                      RichText(
-                        text: TextSpan(
-                          children: [
-                            WidgetSpan(
-                              child: Icon(Icons.emoji_events, size: 20, color: Color(0xFFD4AF37)), // replace with your icon
+                      if (item.score > 0)
+                        RichText(
+                          text: TextSpan(
+                            children: [
+                              WidgetSpan(
+                                child: Icon(FontAwesomeIcons.award, size: 14, color: Color(0xFFD4AF37)), // replace with your icon
+                              ),
+                              TextSpan(
+                                text: ' ${item.score}/${item.questionItems.length}', // replace with your text
+                                style: TextStyle(fontSize: 10, color: Color(0xFFD4AF37)), // change the color here
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
+                  SizedBox(height: 10),
+                  Row(
+                    children: <Widget>[
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Text(
+                            item.questionItems.length < 2 ? '${item.questionItems.length} Question' : '${item.questionItems.length} Questions', // Replace with your first text
+                            textAlign: TextAlign.left,
+                          ),
+                          Text(
+                            _determineQuestionType(
+                              item.numberOfTextQuestions,
+                              item.numberOfVisualQuestions,
+                            ), // Replace with your second text
+                            textAlign: TextAlign.left,
+                          ),
+                        ],
+                      ),
+                      Expanded(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: <Widget>[
+                            IconButton(
+                              icon: Icon(Icons.edit), // Edit icon button
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => NewFlashcard(isEdit: true, title: item.flashcardName, questionList: item.questionItems, position: index)),
+                                );
+                              },
                             ),
-                            TextSpan(
-                              text: '${item.score}/${item.questionItems.length}', // replace with your text
-                              style: TextStyle(fontSize: 10, color: Color(0xFFD4AF37)), // change the color here
+                            IconButton(
+                              icon: Icon(Icons.delete), // Remove icon button
+                              onPressed: () {
+                                showDialog(
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    return AlertDialog(
+                                      title: Text('Delete ${item.flashcardName}'),
+                                      content: Text('Are you sure? Do you really want to delete this flashcard?'),
+                                      actions: <Widget>[
+                                        TextButton(
+                                          child: Text('Cancel'),
+                                          onPressed: () {
+                                            Navigator.of(context).pop();
+                                          },
+                                        ),
+                                        TextButton(
+                                          child: Text('Yes'),
+                                          onPressed: () {
+                                            Provider.of<FlashcardProvider>(context, listen: false).removeFlashcard(item);
+                                            Navigator.of(context).pop();
+                                          },
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                );
+                              },
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.play_arrow), // Play icon button
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => PlayFlashcard(title: item.flashcardName, questionList: item.questionItems, position: index)),
+                                );
+                              },
                             ),
                           ],
                         ),
                       ),
-                  ],
-                ),
-                SizedBox(height: 10),
-                Row(
-                  children: <Widget>[
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        Text(
-                          item.questionItems.length < 2 ? '${item.questionItems.length} Question' : '${item.questionItems.length} Questions', // Replace with your first text
-                          textAlign: TextAlign.left,
-                        ),
-                        Text(
-                          _determineQuestionType(
-                            item.numberOfTextQuestions,
-                            item.numberOfVisualQuestions,
-                          ), // Replace with your second text
-                          textAlign: TextAlign.left,
-                        ),
-                      ],
-                    ),
-                    Expanded(
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: <Widget>[
-                          IconButton(
-                            icon: Icon(Icons.edit), // Replace with your icon
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (context) => NewFlashcard(isEdit: true, title: item.flashcardName, questionList: item.questionItems, position: index)),
-                              );
-                            },
-                          ),
-                          IconButton(
-                            icon: Icon(Icons.delete), // Replace with your icon
-                            onPressed: () {
-                              showDialog(
-                                context: context,
-                                builder: (BuildContext context) {
-                                  return AlertDialog(
-                                    title: Text('Delete ${item.flashcardName}'),
-                                    content: Text('Are you sure? Do you really want to delete this flashcard?'),
-                                    actions: <Widget>[
-                                      TextButton(
-                                        child: Text('Cancel'),
-                                        onPressed: () {
-                                          Navigator.of(context).pop();
-                                        },
-                                      ),
-                                      TextButton(
-                                        child: Text('Yes'),
-                                        onPressed: () {
-                                          Provider.of<FlashcardProvider>(context, listen: false).removeFlashcard(item);
-                                          Navigator.of(context).pop();
-                                        },
-                                      ),
-                                    ],
-                                  );
-                                },
-                              );
-                            },
-                          ),
-                          IconButton(
-                            icon: Icon(Icons.play_arrow), // Replace with your icon
-                            onPressed: () {},
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                )
-              ],
+                    ],
+                  )
+                ],
+              ),
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 }
