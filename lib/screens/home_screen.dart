@@ -131,19 +131,28 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                       if (item.score > 0)
-                        RichText(
-                          text: TextSpan(
-                            children: [
-                              WidgetSpan(
-                                child: Icon(FontAwesomeIcons.award, size: 14, color: Color(0xFFD4AF37)), // replace with your icon
-                              ),
-                              TextSpan(
-                                text: ' ${item.score}/${item.questionItems.length}', // replace with your text
-                                style: TextStyle(fontSize: 10, color: Color(0xFFD4AF37)), // change the color here
-                              ),
-                            ],
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Color(0xFFD4AF37),
+                            borderRadius: BorderRadius.all(Radius.circular(8.0)), // adjust the radius as you need
                           ),
-                        ),
+                          child: Padding(
+                            padding: EdgeInsets.all(8.0),
+                            child: RichText(
+                              text: TextSpan(
+                                children: [
+                                  WidgetSpan(
+                                    child: Icon(FontAwesomeIcons.award, size: 14, color: Colors.white), // replace with your icon
+                                  ),
+                                  TextSpan(
+                                    text: ' ${item.score}/${item.questionItems.length}', // replace with your text
+                                    style: TextStyle(fontSize: 10, color: Colors.white), // change the color here
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        )
                     ],
                   ),
                   SizedBox(height: 10),
