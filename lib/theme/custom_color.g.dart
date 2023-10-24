@@ -52,8 +52,7 @@ class CustomColors extends ThemeExtension<CustomColors> {
       deeporange: deeporange ?? this.deeporange,
       onDeeporange: onDeeporange ?? this.onDeeporange,
       deeporangeContainer: deeporangeContainer ?? this.deeporangeContainer,
-      onDeeporangeContainer:
-          onDeeporangeContainer ?? this.onDeeporangeContainer,
+      onDeeporangeContainer: onDeeporangeContainer ?? this.onDeeporangeContainer,
     );
   }
 
@@ -66,10 +65,8 @@ class CustomColors extends ThemeExtension<CustomColors> {
       sourceDeeporange: Color.lerp(sourceDeeporange, other.sourceDeeporange, t),
       deeporange: Color.lerp(deeporange, other.deeporange, t),
       onDeeporange: Color.lerp(onDeeporange, other.onDeeporange, t),
-      deeporangeContainer:
-          Color.lerp(deeporangeContainer, other.deeporangeContainer, t),
-      onDeeporangeContainer:
-          Color.lerp(onDeeporangeContainer, other.onDeeporangeContainer, t),
+      deeporangeContainer: Color.lerp(deeporangeContainer, other.deeporangeContainer, t),
+      onDeeporangeContainer: Color.lerp(onDeeporangeContainer, other.onDeeporangeContainer, t),
     );
   }
 
@@ -89,8 +86,7 @@ class CustomColors extends ThemeExtension<CustomColors> {
       deeporange: deeporange!.harmonizeWith(dynamic.primary),
       onDeeporange: onDeeporange!.harmonizeWith(dynamic.primary),
       deeporangeContainer: deeporangeContainer!.harmonizeWith(dynamic.primary),
-      onDeeporangeContainer:
-          onDeeporangeContainer!.harmonizeWith(dynamic.primary),
+      onDeeporangeContainer: onDeeporangeContainer!.harmonizeWith(dynamic.primary),
     );
   }
 }
