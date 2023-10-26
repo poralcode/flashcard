@@ -16,20 +16,23 @@ class NewFlashcard extends StatefulWidget {
 
 class _NewFlashcardState extends State<NewFlashcard> {
   final titleController = TextEditingController();
-  final numberController = TextEditingController(); // Controller for number input
+  final numberController = TextEditingController();
   String? errorTitle;
   String? errorQuestionTotal;
+  bool showMessage = false; //Track if showing the title set message.
+  final PageController _controller = PageController();
 
   @override
   void initState() {
     super.initState();
     // Initialize the titleController with the value of 'title'.
     titleController.text = widget.title;
-    numberController.text = widget.questionList.length > 0 ? widget.questionList.length as String : '';
+    numberController.text = widget.questionList.length > 0 ? widget.questionList.length.toString() : '';
   }
 
   @override
   void dispose() {
+    titleController.dispose(); // Dispose the controller to free resources
     numberController.dispose(); // Dispose the controller to free resources
     super.dispose();
   }
@@ -37,141 +40,202 @@ class _NewFlashcardState extends State<NewFlashcard> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          widget.isEdit ? 'Edit Flashcard' : 'New Flashcard',
-          style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.w500),
+        appBar: AppBar(
+          title: Text(
+            widget.isEdit ? 'Edit Flashcard' : 'New Flashcard',
+            style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.w500),
+          ),
         ),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: <Widget>[
-            Center(
-              child: Container(
-                constraints: BoxConstraints(maxWidth: 400),
+        body: WillPopScope(
+          onWillPop: () async {
+            if (_controller.page == 1.0) {
+              _controller.previousPage(duration: Duration(milliseconds: 500), curve: Curves.ease);
+              return false;
+            }
+            return true;
+          },
+          child: PageView(
+            controller: _controller,
+            physics: NeverScrollableScrollPhysics(), // disable swiping
+            children: <Widget>[
+              Padding(
+                padding: const EdgeInsets.all(16.0),
                 child: Column(
-                  children: [
-                    TextField(
-                      key: Key('title_textfield'),
-                      controller: titleController,
-                      autofocus: true,
-                      maxLength: 150,
-                      decoration: InputDecoration(
-                        labelText: 'Title',
-                        hintText: 'e.g. Medical Equipments',
-                        hintStyle: TextStyle(color: Colors.grey),
-                        helperText: 'Add a meaningful title for this flashcard.',
-                        border: OutlineInputBorder(),
-                        errorText: errorTitle,
-                        suffixIcon: IconButton(
-                          onPressed: () {
-                            titleController.clear();
-                            setState(() {
-                              errorTitle = null;
-                            });
-                          },
-                          icon: Icon(Icons.clear),
-                        ),
-                      ),
-                      onChanged: (value) {
-                        validateTitle(value);
-                      },
-                    ),
-                    SizedBox(height: 25),
+                  children: <Widget>[
+                    Center(
+                      child: Container(
+                        constraints: BoxConstraints(maxWidth: 400),
+                        child: Column(
+                          children: [
+                            TextField(
+                              key: Key('title_textfield'),
+                              controller: titleController,
+                              autofocus: true,
+                              maxLength: 150,
+                              decoration: InputDecoration(
+                                labelText: 'Title',
+                                hintText: 'e.g. Medical Equipments',
+                                hintStyle: TextStyle(color: Colors.grey),
+                                helperText: 'Add a meaningful title for this flashcard.',
+                                border: OutlineInputBorder(),
+                                errorText: errorTitle,
+                                suffixIcon: IconButton(
+                                  onPressed: () {
+                                    titleController.clear();
+                                    setState(() {
+                                      errorTitle = null;
+                                    });
+                                  },
+                                  icon: Icon(Icons.clear),
+                                ),
+                              ),
+                              onChanged: (value) {
+                                validateTitle(value);
+                              },
+                            ),
+                            SizedBox(height: 25),
 
-                    // Number input field with input formatter
-                    TextFormField(
-                      key: Key('number_input'),
-                      controller: numberController,
-                      maxLength: 2,
-                      keyboardType: TextInputType.number, // Set input type to number
-                      inputFormatters: <TextInputFormatter>[
-                        FilteringTextInputFormatter.digitsOnly // Allow only digits
-                      ],
-                      decoration: InputDecoration(
-                        labelText: 'Total number of questions',
-                        hintText: 'Enter a number',
-                        errorText: errorQuestionTotal,
-                        border: OutlineInputBorder(),
-                      ),
-                      onChanged: (value) {
-                        validateTotalNumber(value);
-                      },
-                    ),
+                            // Number input field with input formatter
+                            TextFormField(
+                              key: Key('number_input'),
+                              controller: numberController,
+                              maxLength: 2,
+                              keyboardType: TextInputType.number, // Set input type to number
+                              inputFormatters: <TextInputFormatter>[
+                                FilteringTextInputFormatter.digitsOnly // Allow only digits
+                              ],
+                              decoration: InputDecoration(
+                                labelText: 'Total number of questions',
+                                hintText: 'Enter a number',
+                                errorText: errorQuestionTotal,
+                                border: OutlineInputBorder(),
+                              ),
+                              onChanged: (value) {
+                                validateTotalNumber(value);
+                              },
+                            ),
 
-                    SizedBox(height: 16),
+                            SizedBox(height: 16),
 
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: FilledButton(
-                        onPressed: () {
-                          validateTitle(titleController.text);
-                          validateTotalNumber(numberController.text);
-                          //Assuming there are no more errors, we will now proceed showing the new screen.
-                          if (errorTitle == null && errorQuestionTotal == null) {
-                            if (int.parse(numberController.text) < widget.questionList.length) {
-                              showDialog(
-                                context: context,
-                                builder: (BuildContext context) {
-                                  return AlertDialog(
-                                    title: Text('Reduce number of questions'),
-                                    content: Text('This will reduce the number of questions to ${numberController.text}. Do you really want to do this?'),
-                                    actions: <Widget>[
-                                      TextButton(
-                                        child: Text('Cancel'),
-                                        onPressed: () {
-                                          Navigator.of(context).pop();
-                                        },
-                                      ),
-                                      TextButton(
-                                        child: Text('Yes'),
-                                        onPressed: () {
-                                          Navigator.of(context).pop();
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                                builder: (context) => NewQuestion(
-                                                      isEdit: widget.isEdit,
-                                                      title: titleController.text,
-                                                      totalQuestions: int.tryParse(numberController.text),
-                                                      questionList: widget.questionList,
-                                                      position: widget.position,
-                                                    )),
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: FilledButton(
+                                onPressed: () {
+                                  validateTitle(titleController.text);
+                                  validateTotalNumber(numberController.text);
+                                  //Assuming there are no more errors, we will now proceed showing the new screen.
+                                  if (errorTitle == null && errorQuestionTotal == null) {
+                                    if (int.parse(numberController.text) < widget.questionList.length) {
+                                      showDialog(
+                                        context: context,
+                                        builder: (BuildContext context) {
+                                          return AlertDialog(
+                                            title: Text('Reduce number of questions'),
+                                            content: Text('This will reduce the number of questions to ${numberController.text}. Do you really want to do this?'),
+                                            actions: <Widget>[
+                                              TextButton(
+                                                child: Text('Cancel'),
+                                                onPressed: () {
+                                                  Navigator.of(context).pop();
+                                                },
+                                              ),
+                                              TextButton(
+                                                child: Text('Yes'),
+                                                onPressed: () {
+                                                  Navigator.of(context).pop();
+                                                  Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                        builder: (context) => NewQuestion(
+                                                              isEdit: widget.isEdit,
+                                                              title: titleController.text,
+                                                              totalQuestions: int.tryParse(numberController.text),
+                                                              questionList: widget.questionList,
+                                                              position: widget.position,
+                                                            )),
+                                                  );
+                                                },
+                                              ),
+                                            ],
                                           );
                                         },
-                                      ),
-                                    ],
-                                  );
+                                      );
+                                    } else {
+                                      _controller.nextPage(duration: Duration(milliseconds: 500), curve: Curves.ease);
+                                    }
+                                  }
                                 },
-                              );
-                            } else {
-                              // Navigate to NewQuestion screen.
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => NewQuestion(
-                                          isEdit: widget.isEdit,
-                                          title: titleController.text,
-                                          totalQuestions: int.tryParse(numberController.text),
-                                          questionList: widget.questionList,
-                                          position: widget.position,
-                                        )),
-                              );
-                            }
-                          }
-                        },
-                        child: Text("Continue"),
+                                child: Text("Continue"),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
-            ),
-          ],
-        ),
-      ),
-    );
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    Center(
+                      child: Container(
+                        constraints: BoxConstraints(maxWidth: 400),
+                        child: Column(
+                          children: [
+                            Icon(
+                              Icons.check_circle,
+                              size: 140,
+                              color: Colors.deepPurple,
+                            ),
+                            SizedBox(height: 20),
+                            Text(
+                              'The title is set',
+                              style: TextStyle(
+                                fontSize: 20, // Set the desired font size
+                              ),
+                            ),
+                            Text(
+                              "Let's now create the questions and answers.",
+                              style: TextStyle(
+                                fontSize: 14, // Set the desired font size
+                                color: Colors.grey, // Set the desired text color
+                              ),
+                            ),
+                            SizedBox(height: 16),
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: FilledButton(
+                                onPressed: () {
+                                  FocusManager.instance.primaryFocus?.unfocus(); // This should hide the Keyboard.
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) => NewQuestion(
+                                              isEdit: widget.isEdit,
+                                              title: titleController.text,
+                                              totalQuestions: int.tryParse(numberController.text),
+                                              questionList: widget.questionList,
+                                              position: widget.position,
+                                            )),
+                                  );
+                                  //_controller.previousPage(duration: Duration(milliseconds: 10), curve: Curves.ease);
+                                },
+                                child: Text("Continue"),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ));
   }
 
   void validateTotalNumber(String value) {
